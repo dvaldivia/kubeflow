@@ -227,6 +227,18 @@ func generateDeployment(tb *tensorboardv1alpha1.Tensorboard, log logr.Logger, r 
 		})
 	}
 
+	var envFrom []corev1.EnvFromSource
+	// if .spec.credsSecret is specified, attach that secret as environment variables
+	if tb.Spec.CredsSecret != "" {
+		envFrom = append(envFrom, corev1.EnvFromSource{
+			SecretRef: &corev1.SecretEnvSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: tb.Spec.CredsSecret,
+				},
+			},
+		})
+	}
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      tb.Name,
@@ -252,6 +264,7 @@ func generateDeployment(tb *tensorboardv1alpha1.Tensorboard, log logr.Logger, r 
 							Image:           "tensorflow/tensorflow:2.1.0",
 							ImagePullPolicy: "IfNotPresent",
 							Command:         []string{"/usr/local/bin/tensorboard"},
+							EnvFrom:         envFrom,
 							WorkingDir:      "/",
 							Args: []string{
 								"--logdir=" + mountpath,
@@ -374,8 +387,8 @@ func extractPVCSubPath(path string) string {
 	}
 }
 
-//Searches a corev1.PodList for running pods and returns
-//a running corev1.Pod (if exists)
+// Searches a corev1.PodList for running pods and returns
+// a running corev1.Pod (if exists)
 func findRunningPod(pods *corev1.PodList) corev1.Pod {
 	for _, pod := range pods.Items {
 		if pod.Status.Phase == "Running" {
@@ -435,9 +448,9 @@ func generateNodeAffinity(affinity *corev1.Affinity, pvcname string, r *Tensorbo
 	return nil
 }
 
-//Checks the value of 'RWO_PVC_SCHEDULING' env var (if present in the environment) and returns
-//'true' or 'false' accordingly. If 'RWO_PVC_SCHEDULING' is NOT present, then the value of the
-//returned boolean is set to 'false', so that the scheduling functionality is off by default.
+// Checks the value of 'RWO_PVC_SCHEDULING' env var (if present in the environment) and returns
+// 'true' or 'false' accordingly. If 'RWO_PVC_SCHEDULING' is NOT present, then the value of the
+// returned boolean is set to 'false', so that the scheduling functionality is off by default.
 func rwoPVCScheduling() (error, bool) {
 	if value, exists := os.LookupEnv("RWO_PVC_SCHEDULING"); !exists || value == "false" || value == "False" || value == "FALSE" {
 		return nil, false

@@ -27,7 +27,15 @@ import (
 type TensorboardSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// LogsPath references the location of the logs for the TensorBoard, they may start with a schema
+	// such as gcp://, s3://, minio://, pvc://
 	LogsPath string `json:"logspath"`
+
+	// CredsSecret associates a secret that will be mounted as environment variables into the tensorboard
+	// container
+	// +optional
+	CredsSecret string `json:"credsSecret"`
 }
 
 // TensorboardCondition defines the observed state of Tensorboard

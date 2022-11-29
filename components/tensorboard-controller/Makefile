@@ -51,7 +51,7 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
 
 # Build the docker image
-docker-build: test
+docker-build:
 	cd .. && docker build -f tensorboard-controller/Dockerfile . -t ${IMG}
 
 # Push the docker image
